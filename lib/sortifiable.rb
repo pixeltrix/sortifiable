@@ -58,7 +58,7 @@ module Sortifiable
               reflection.options[:foreign_type].to_sym
             ]
           else
-            reflection.association_foreign_key.to_sym
+            options[:scope] = reflection.association_foreign_key.to_sym
           end
         else
           raise ArgumentError, "Only belongs_to associations can be used as a scope"

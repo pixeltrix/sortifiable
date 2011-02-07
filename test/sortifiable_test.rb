@@ -55,6 +55,20 @@ class ArrayScopeListMixin < ActiveRecord::Base
   default_scope order(:pos)
 end
 
+class AssociationScopeListMixin < ActiveRecord::Base
+  belongs_to :parent
+  acts_as_list :column => "pos", :scope => :parent
+  set_table_name "mixins"
+  default_scope order(:pos)
+end
+
+class PolymorphicAssociationScopeListMixin < ActiveRecord::Base
+  belongs_to :parent, :polymorphic => true
+  acts_as_list :column => "pos", :scope => :parent
+  set_table_name "mixins"
+  default_scope order(:pos)
+end
+
 teardown_db
 
 class NonListTest < Test::Unit::TestCase
@@ -600,6 +614,42 @@ class ArrayScopeListTest < Test::Unit::TestCase
   def test_lower_items
     assert_equal [3, 4], ArrayScopeListMixin.find(2).lower_items.map(&:id)
     assert_equal [], ArrayScopeListMixin.find(4).lower_items.map(&:id)
+  end
+
+end
+
+class AssociationScopeListTest < Test::Unit::TestCase
+
+  def setup
+    setup_db
+    (1..4).each do |counter|
+      AssociationScopeListMixin.create!(
+        :pos => counter,
+        :parent_id => 5
+      )
+    end
+
+    (1..4).each do |counter|
+      PolymorphicAssociationScopeListMixin.create!(
+        :pos => counter,
+        :parent_id => 5,
+        :parent_type => 'ParentClass'
+      )
+    end
+  end
+
+  def teardown
+    teardown_db
+  end
+
+  def test_association_scope_is_configured
+    assert_equal :parent_id,
+      AssociationScopeListMixin.acts_as_list_options[:scope]
+  end
+
+  def test_polymorphic_association_scope_is_configured
+    assert_equal [:parent_id, :parent_type],
+      PolymorphicAssociationScopeListMixin.acts_as_list_options[:scope]
   end
 
 end
