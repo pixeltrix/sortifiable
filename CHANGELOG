@@ -1,3 +1,6 @@
+* Don't add acts_as_list callbacks to all models
+
+
 *0.1.0 (February 6th, 2011)
 
 * First release

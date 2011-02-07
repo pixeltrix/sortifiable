@@ -57,6 +57,26 @@ end
 
 teardown_db
 
+class NonListTest < Test::Unit::TestCase
+
+  def setup
+    setup_db
+  end
+
+  def teardown
+    teardown_db
+  end
+
+  def test_callbacks_are_not_added_to_all_models
+    Mixin.create! :pos => 1, :parent_id => 5
+    assert_equal 1, Mixin.first.id
+
+    Mixin.find(1).destroy
+    assert_equal [], Mixin.all
+  end
+
+end
+
 class ListTest < Test::Unit::TestCase
 
   def setup

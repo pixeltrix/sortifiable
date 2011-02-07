@@ -29,9 +29,6 @@ module Sortifiable
   included do
     class_attribute :acts_as_list_options, :instance_writer => false
     self.acts_as_list_options = {}
-
-    before_create :add_to_list_bottom
-    before_destroy :decrement_position_on_lower_items, :if => :in_list?
   end
 
   module ClassMethods
@@ -69,6 +66,9 @@ module Sortifiable
       elsif options[:scope].is_a?(Symbol) && options[:scope].to_s !~ /_id$/
         options[:scope] = "#{options[:scope]}_id".to_sym
       end
+
+      before_create :add_to_list_bottom
+      before_destroy :decrement_position_on_lower_items, :if => :in_list?
 
       self.acts_as_list_options = options
     end
