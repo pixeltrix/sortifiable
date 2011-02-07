@@ -83,8 +83,10 @@ module Sortifiable
   module InstanceMethods
     # Add the item to the end of the list
     def add_to_list
-      remove_from_list if in_list?
-      update_attribute(position_column, last_position + 1)
+      list_class.transaction do
+        remove_from_list if in_list?
+        update_attribute(position_column, last_position + 1)
+      end
     end
 
     # Returns the current position
@@ -133,12 +135,14 @@ module Sortifiable
     # Insert the item at the given position (defaults to the top position of 1).
     def insert_at(position = 1)
       if position > 0
-        remove_from_list
-        if position > last_position
-          add_to_list
-        else
-          increment_position_on_lower_items(position - 1)
-          update_attribute(position_column, position)
+        list_class.transaction do
+          remove_from_list
+          if position > last_position
+            add_to_list
+          else
+            increment_position_on_lower_items(position - 1)
+            update_attribute(position_column, position)
+          end
         end
       else
         false
@@ -207,8 +211,10 @@ module Sortifiable
     # Removes the item from the list.
     def remove_from_list
       if in_list?
-        decrement_position_on_lower_items
-        update_attribute(position_column, nil)
+        list_class.transaction do
+          decrement_position_on_lower_items
+          update_attribute(position_column, nil)
+        end
       else
         false
       end
@@ -220,7 +226,7 @@ module Sortifiable
       end
 
       def base_scope #:nodoc:
-        self.class.unscoped.where(scope_condition)
+        list_class.unscoped.where(scope_condition)
       end
 
       def decrement_position_on_lower_items #:nodoc:
@@ -229,6 +235,10 @@ module Sortifiable
 
       def increment_position_on_lower_items(position) #:nodoc:
         lower_scope(position).update_all(position_update('+ 1'))
+      end
+
+      def list_class #:nodoc:
+        self.class
       end
 
       def list_scope #:nodoc:
