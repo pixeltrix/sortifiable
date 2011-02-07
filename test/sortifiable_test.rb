@@ -10,6 +10,7 @@ def setup_db
   silence_stream(STDOUT) do
     ActiveRecord::Schema.define(:version => 1) do
       create_table :mixins do |t|
+        t.column :type, :string
         t.column :pos, :integer
         t.column :parent_id, :integer
         t.column :parent_type, :string
@@ -31,7 +32,7 @@ setup_db
 class Mixin < ActiveRecord::Base
 end
 
-class ListMixin < Mixin
+class ListMixin < ActiveRecord::Base
   acts_as_list :column => "pos", :scope => :parent
   set_table_name "mixins"
   default_scope order(:pos)
@@ -46,10 +47,9 @@ end
 class ListWithStringScopeMixin < ActiveRecord::Base
   acts_as_list :column => "pos", :scope => 'parent_id = #{parent_id}'
   set_table_name "mixins"
-  default_scope order(:pos)
 end
 
-class ArrayScopeListMixin < Mixin
+class ArrayScopeListMixin < ActiveRecord::Base
   acts_as_list :column => "pos", :scope => [:parent_id, :parent_type]
   set_table_name "mixins"
   default_scope order(:pos)
@@ -292,11 +292,21 @@ class ListSubTest < Test::Unit::TestCase
 
   def setup
     setup_db
-    (1..4).each { |i| ((i % 2 == 1) ? ListMixinSub1 : ListMixinSub2).create! :pos => i, :parent_id => 5000 }
+    (1..4).each do |i|
+      klass = ((i % 2 == 1) ? ListMixinSub1 : ListMixinSub2)
+      klass.create! :pos => i, :parent_id => 5000
+    end
   end
 
   def teardown
     teardown_db
+  end
+
+  def test_sti_class
+    assert_instance_of ListMixinSub1, ListMixin.find(1)
+    assert_instance_of ListMixinSub2, ListMixin.find(2)
+    assert_instance_of ListMixinSub1, ListMixin.find(3)
+    assert_instance_of ListMixinSub2, ListMixin.find(4)
   end
 
   def test_reordering
@@ -404,6 +414,10 @@ class ListSubTest < Test::Unit::TestCase
     ListMixin.find(3).remove_from_list
     assert_equal [4], ListMixin.find(2).lower_items.map(&:id)
     assert_equal [], ListMixin.find(4).lower_items.map(&:id)
+  end
+
+  def test_list_class
+    assert_equal [1, 2, 3, 4], ListMixin.all.map(&:pos)
   end
 
 end

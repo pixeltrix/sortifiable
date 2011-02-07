@@ -1,5 +1,7 @@
 *0.1.1 (February 7th, 2011)
 
+* Use the class in which act_as_list is called
+
 * Wrap list updates inside a transaction block
 
 * Don't include instance methods in all models

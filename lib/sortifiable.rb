@@ -67,6 +67,8 @@ module Sortifiable
         options[:scope] = "#{options[:scope]}_id".to_sym
       end
 
+      options[:class] = self
+
       include InstanceMethods
       before_create :add_to_list_bottom
       before_destroy :decrement_position_on_lower_items, :if => :in_list?
@@ -238,7 +240,7 @@ module Sortifiable
       end
 
       def list_class #:nodoc:
-        self.class
+        acts_as_list_options[:class]
       end
 
       def list_scope #:nodoc:
