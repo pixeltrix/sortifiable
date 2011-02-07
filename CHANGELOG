@@ -1,3 +1,5 @@
+* Don't include instance methods in all models
+
 * Don't add acts_as_list callbacks to all models
 
 

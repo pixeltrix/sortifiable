@@ -75,6 +75,11 @@ class NonListTest < Test::Unit::TestCase
     assert_equal [], Mixin.all
   end
 
+  def test_instance_methods_are_not_included_in_all_models
+    Mixin.create! :pos => 1, :parent_id => 5
+    assert_equal false, Mixin.first.respond_to?(:in_list?)
+  end
+
 end
 
 class ListTest < Test::Unit::TestCase
