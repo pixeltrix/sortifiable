@@ -70,7 +70,7 @@ module Sortifiable
       options[:class] = self
 
       include InstanceMethods
-      before_create :add_to_list_bottom
+      before_create :add_to_list
       before_destroy :decrement_position_on_lower_items, :if => :in_list?
 
       self.acts_as_list_options = options
@@ -85,12 +85,18 @@ module Sortifiable
   module InstanceMethods
     # Add the item to the end of the list
     def add_to_list
-      list_class.transaction do
-        if in_list?
-          decrement_position_on_lower_items
-          update_position(nil)
+      if in_list?
+        move_to_bottom
+      else
+        list_class.transaction do
+          ids = lock_list!
+          last_position = ids.size
+          if persisted?
+            update_position(last_position + 1)
+          else
+            send("#{position_column}=".to_sym, last_position + 1)
+          end
         end
-        update_position(last_position + 1)
       end
     end
 
@@ -139,22 +145,39 @@ module Sortifiable
 
     # Insert the item at the given position (defaults to the top position of 1).
     def insert_at(position = 1)
-      if position > 0
-        list_class.transaction do
-          if in_list?
-            decrement_position_on_lower_items
-            update_position(nil)
-          end
+      list_class.transaction do
+        ids = lock_list!
+        position = [[1, position].max, ids.size].min
 
-          if position > last_position
-            update_position(last_position + 1)
-          else
-            increment_position_on_lower_items(position - 1)
-            update_position(position)
-          end
+        if persisted?
+          current_position = ids.index(id) + 1
+
+          sql = <<-SQL
+            #{quoted_position_column} = CASE
+            WHEN #{quoted_position_column} = #{current_position} THEN #{position}
+            WHEN #{quoted_position_column} > #{current_position}
+            AND #{quoted_position_column} < #{position} THEN #{quoted_position_column} - 1
+            WHEN #{quoted_position_column} < #{current_position}
+            AND #{quoted_position_column} >= #{position} THEN #{quoted_position_column} + 1
+            ELSE #{quoted_position_column}
+            END
+          SQL
+
+          list_scope.update_all(sql)
+          update_position(position)
+        else
+          save!
+
+          sql = <<-SQL
+            #{quoted_position_column} = CASE
+            WHEN #{quoted_position_column} >= #{position} THEN #{quoted_position_column} + 1
+            ELSE #{quoted_position_column}
+            END
+          SQL
+
+          list_scope.update_all(sql)
+          update_position(position)
         end
-      else
-        false
       end
     end
 
@@ -195,34 +218,125 @@ module Sortifiable
 
     # Swap positions with the next higher item, if one exists.
     def move_higher
-      in_list? && (first? || insert_at(current_position - 1))
+      if in_list?
+        list_class.transaction do
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          if current_position > 1
+            sql = <<-SQL
+              #{quoted_position_column} = CASE
+              WHEN #{quoted_position_column} = #{current_position} - 1 THEN #{current_position}
+              WHEN #{quoted_position_column} = #{current_position} THEN #{current_position} - 1
+              ELSE #{quoted_position_column}
+              END
+            SQL
+
+            send("#{position_column}=".to_sym, current_position - 1)
+            list_scope.update_all(sql) > 0
+          end
+        end
+      else
+        false
+      end
     end
     alias_method :move_up, :move_higher
 
     # Swap positions with the next lower item, if one exists.
     def move_lower
-      in_list? && (last? || insert_at(current_position + 1))
+      if in_list?
+        list_class.transaction do
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          if current_position < last_position
+            sql = <<-SQL
+              #{quoted_position_column} = CASE
+              WHEN #{quoted_position_column} = #{current_position} + 1 THEN #{current_position}
+              WHEN #{quoted_position_column} = #{current_position} THEN #{current_position} + 1
+              ELSE #{quoted_position_column}
+              END
+            SQL
+
+            send("#{position_column}=".to_sym, current_position + 1)
+            list_scope.update_all(sql) > 0
+          end
+        end
+      else
+        false
+      end
     end
     alias_method :move_down, :move_lower
 
     # Move to the bottom of the list. If the item is already in the list,
     # the items below it have their position adjusted accordingly.
     def move_to_bottom
-      in_list? && (last? || add_to_list)
+      if in_list?
+        list_class.transaction do
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          if current_position < last_position
+            sql = <<-SQL
+              #{quoted_position_column} = CASE
+              WHEN #{quoted_position_column} = #{current_position} THEN #{last_position}
+              WHEN #{quoted_position_column} > #{current_position} THEN #{quoted_position_column} - 1
+              ELSE #{quoted_position_column}
+              END
+            SQL
+
+            send("#{position_column}=".to_sym, last_position)
+            list_scope.update_all(sql) > 0
+          end
+        end
+      else
+        false
+      end
     end
 
     # Move to the top of the list. If the item is already in the list,
     # the items above it have their position adjusted accordingly.
     def move_to_top
-      in_list? && (first? || insert_at(1))
+      if in_list?
+        list_class.transaction do
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          if current_position > 1
+            sql = <<-SQL
+              #{quoted_position_column} = CASE
+              WHEN #{quoted_position_column} = #{current_position} THEN 1
+              WHEN #{quoted_position_column} < #{current_position} THEN #{quoted_position_column} + 1
+              ELSE #{quoted_position_column}
+              END
+            SQL
+
+            send("#{position_column}=".to_sym, 1)
+            list_scope.update_all(sql) > 0
+          end
+        end
+      else
+        false
+      end
     end
 
     # Removes the item from the list.
     def remove_from_list
       if in_list?
         list_class.transaction do
-          decrement_position_on_lower_items
-          update_position(nil)
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          sql = <<-SQL
+            #{quoted_position_column} = CASE
+            WHEN #{quoted_position_column} = #{current_position} THEN NULL
+            WHEN #{quoted_position_column} > #{current_position} THEN #{quoted_position_column} - 1
+            ELSE #{quoted_position_column}
+            END
+          SQL
+
+          send("#{position_column}=".to_sym, nil)
+          list_scope.update_all(sql) > 0
         end
       else
         false
@@ -230,20 +344,14 @@ module Sortifiable
     end
 
     private
-      def add_to_list_bottom #:nodoc:
-        send("#{position_column}=".to_sym, last_position + 1)
-      end
-
       def base_scope #:nodoc:
         list_class.unscoped.where(scope_condition)
       end
 
       def decrement_position_on_lower_items #:nodoc:
-        lower_scope(current_position).update_all(position_update('- 1'))
-      end
-
-      def increment_position_on_lower_items(position) #:nodoc:
-        lower_scope(position).update_all(position_update('+ 1'))
+        update = "#{quoted_position_column} = #{quoted_position_column} - 1"
+        conditions = "#{quoted_position_column} > #{current_position}"
+        list_scope.update_all(update, conditions) > 0
       end
 
       def list_class #:nodoc:
@@ -252,6 +360,10 @@ module Sortifiable
 
       def list_scope #:nodoc:
         base_scope.order(position_column).where("#{quoted_position_column} IS NOT NULL")
+      end
+
+      def lock_list! #:nodoc:
+        connection.select_values(list_scope.select(list_class.primary_key).lock(true).to_sql)
       end
 
       def lower_scope(position) #:nodoc:
@@ -264,10 +376,6 @@ module Sortifiable
 
       def position_column #:nodoc:
         acts_as_list_options[:column]
-      end
-
-      def position_update(direction) #:nodoc:
-        "#{quoted_position_column} = (#{quoted_position_column} #{direction})"
       end
 
       def quoted_position_column #:nodoc:
