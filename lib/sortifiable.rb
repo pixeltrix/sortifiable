@@ -86,7 +86,10 @@ module Sortifiable
     # Add the item to the end of the list
     def add_to_list
       list_class.transaction do
-        remove_from_list if in_list?
+        if in_list?
+          decrement_position_on_lower_items
+          update_attribute(position_column, nil)
+        end
         update_attribute(position_column, last_position + 1)
       end
     end
@@ -138,9 +141,13 @@ module Sortifiable
     def insert_at(position = 1)
       if position > 0
         list_class.transaction do
-          remove_from_list
+          if in_list?
+            decrement_position_on_lower_items
+            update_attribute(position_column, nil)
+          end
+
           if position > last_position
-            add_to_list
+            update_attribute(position_column, last_position + 1)
           else
             increment_position_on_lower_items(position - 1)
             update_attribute(position_column, position)
