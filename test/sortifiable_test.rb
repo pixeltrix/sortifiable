@@ -17,6 +17,8 @@ def setup_db
         t.column :created_at, :datetime
         t.column :updated_at, :datetime
       end
+
+      #add_index :mixins, [:type, :pos], :unique => true
     end
   end
 end
@@ -108,6 +110,12 @@ class ListTest < Test::Unit::TestCase
   end
 
   def test_reordering
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
+
+    ListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
+
+    ListMixin.find(4).move_lower
     assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
 
     ListMixin.find(2).move_lower
@@ -326,6 +334,12 @@ class ListSubTest < Test::Unit::TestCase
   def test_reordering
     assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
 
+    ListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
+
+    ListMixin.find(4).move_lower
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
+
     ListMixin.find(2).move_lower
     assert_equal [1, 3, 2, 4], ListMixin.where('parent_id = 5000').map(&:id)
 
@@ -458,6 +472,12 @@ class ArrayScopeListTest < Test::Unit::TestCase
   end
 
   def test_reordering
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    ArrayScopeListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    ArrayScopeListMixin.find(4).move_lower
     assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
 
     ArrayScopeListMixin.find(2).move_lower
