@@ -17,8 +17,6 @@ def setup_db
         t.column :created_at, :datetime
         t.column :updated_at, :datetime
       end
-
-      #add_index :mixins, [:type, :pos], :unique => true
     end
   end
 end
@@ -112,12 +110,6 @@ class ListTest < Test::Unit::TestCase
   def test_reordering
     assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
 
-    ListMixin.find(1).move_higher
-    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
-
-    ListMixin.find(4).move_lower
-    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:id)
-
     ListMixin.find(2).move_lower
     assert_equal [1, 3, 2, 4], ListMixin.where('parent_id = 5').map(&:id)
 
@@ -135,6 +127,16 @@ class ListTest < Test::Unit::TestCase
 
     ListMixin.find(4).move_to_top
     assert_equal [4, 1, 3, 2], ListMixin.where('parent_id = 5').map(&:id)
+  end
+
+  def test_bounds_checking
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:pos)
+
+    ListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:pos)
+
+    ListMixin.find(4).move_lower
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5').map(&:pos)
   end
 
   def test_move_to_bottom_with_next_to_last_item
@@ -334,12 +336,6 @@ class ListSubTest < Test::Unit::TestCase
   def test_reordering
     assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
 
-    ListMixin.find(1).move_higher
-    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
-
-    ListMixin.find(4).move_lower
-    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:id)
-
     ListMixin.find(2).move_lower
     assert_equal [1, 3, 2, 4], ListMixin.where('parent_id = 5000').map(&:id)
 
@@ -357,6 +353,16 @@ class ListSubTest < Test::Unit::TestCase
 
     ListMixin.find(4).move_to_top
     assert_equal [4, 1, 3, 2], ListMixin.where('parent_id = 5000').map(&:id)
+  end
+
+  def test_bounds_checking
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:pos)
+
+    ListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:pos)
+
+    ListMixin.find(4).move_lower
+    assert_equal [1, 2, 3, 4], ListMixin.where('parent_id = 5000').map(&:pos)
   end
 
   def test_move_to_bottom_with_next_to_last_item
@@ -474,12 +480,6 @@ class ArrayScopeListTest < Test::Unit::TestCase
   def test_reordering
     assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
 
-    ArrayScopeListMixin.find(1).move_higher
-    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
-
-    ArrayScopeListMixin.find(4).move_lower
-    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
-
     ArrayScopeListMixin.find(2).move_lower
     assert_equal [1, 3, 2, 4], ArrayScopeListMixin.where(conditions).map(&:id)
 
@@ -497,6 +497,16 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
     ArrayScopeListMixin.find(4).move_to_top
     assert_equal [4, 1, 3, 2], ArrayScopeListMixin.where(conditions).map(&:id)
+  end
+
+  def test_bounds_checking
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:pos)
+
+    ArrayScopeListMixin.find(1).move_higher
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:pos)
+
+    ArrayScopeListMixin.find(4).move_lower
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:pos)
   end
 
   def test_move_to_bottom_with_next_to_last_item
