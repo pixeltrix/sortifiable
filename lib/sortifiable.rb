@@ -88,9 +88,9 @@ module Sortifiable
       list_class.transaction do
         if in_list?
           decrement_position_on_lower_items
-          update_attribute(position_column, nil)
+          update_position(nil)
         end
-        update_attribute(position_column, last_position + 1)
+        update_position(last_position + 1)
       end
     end
 
@@ -101,7 +101,7 @@ module Sortifiable
 
     # Decrease the position of this item without adjusting the rest of the list.
     def decrement_position
-      in_list? && update_attribute(position_column, current_position - 1)
+      in_list? && update_position(current_position - 1)
     end
 
     # Return +true+ if this object is the first in the list.
@@ -134,7 +134,7 @@ module Sortifiable
 
     # Increase the position of this item without adjusting the rest of the list.
     def increment_position
-      in_list? && update_attribute(position_column, current_position + 1)
+      in_list? && update_position(current_position + 1)
     end
 
     # Insert the item at the given position (defaults to the top position of 1).
@@ -143,14 +143,14 @@ module Sortifiable
         list_class.transaction do
           if in_list?
             decrement_position_on_lower_items
-            update_attribute(position_column, nil)
+            update_position(nil)
           end
 
           if position > last_position
-            update_attribute(position_column, last_position + 1)
+            update_position(last_position + 1)
           else
             increment_position_on_lower_items(position - 1)
-            update_attribute(position_column, position)
+            update_position(position)
           end
         end
       else
@@ -222,7 +222,7 @@ module Sortifiable
       if in_list?
         list_class.transaction do
           decrement_position_on_lower_items
-          update_attribute(position_column, nil)
+          update_position(nil)
         end
       else
         false
@@ -280,6 +280,11 @@ module Sortifiable
         else
           Array.wrap(acts_as_list_options[:scope]).inject({}){ |m,k| m[k] = send(k); m }
         end
+      end
+
+      def update_position(new_position)
+        list_class.update_all(["#{quoted_position_column} = ?", new_position], list_class.primary_key => id)
+        send("#{position_column}=".to_sym, new_position)
       end
   end
 end
