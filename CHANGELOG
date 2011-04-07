@@ -1,3 +1,10 @@
+*0.2.0 (April 7th, 2011)
+
+* Use pessimistic locking to reduce concurrency problems
+
+* Use update_all instead of update_attribute so callbacks are not triggered
+
+
 *0.1.2 (February 7th, 2011)
 
 * Configure association scopes correctly
