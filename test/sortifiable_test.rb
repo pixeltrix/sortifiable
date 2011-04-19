@@ -102,8 +102,8 @@ class ListTest < Test::Unit::TestCase
   def setup
     setup_db
     [5, 6].each do |parent_id|
-      (1..4).each do |counter|
-        ListMixin.create! :pos => counter, :parent_id => parent_id
+      (1..4).each do |i|
+        ListMixin.create! :pos => i, :parent_id => parent_id
       end
     end
   end
@@ -328,12 +328,12 @@ class ListTest < Test::Unit::TestCase
 
   def test_higher_items
     assert_equal [1, 2], ListMixin.find(3).higher_items.map(&:id)
-    assert_equal [], ListMixin.find(1).higher_items.map(&:id)
+    assert_equal     [], ListMixin.find(1).higher_items.map(&:id)
   end
 
   def test_lower_items
     assert_equal [3, 4], ListMixin.find(2).lower_items.map(&:id)
-    assert_equal [], ListMixin.find(4).lower_items.map(&:id)
+    assert_equal     [], ListMixin.find(4).lower_items.map(&:id)
   end
 
 end
@@ -533,13 +533,13 @@ class ListSubTest < Test::Unit::TestCase
   def test_higher_items
     ListMixin.find(2).remove_from_list
     assert_equal [1], ListMixin.find(3).higher_items.map(&:id)
-    assert_equal [], ListMixin.find(1).higher_items.map(&:id)
+    assert_equal  [], ListMixin.find(1).higher_items.map(&:id)
   end
 
   def test_lower_items
     ListMixin.find(3).remove_from_list
     assert_equal [4], ListMixin.find(2).lower_items.map(&:id)
-    assert_equal [], ListMixin.find(4).lower_items.map(&:id)
+    assert_equal  [], ListMixin.find(4).lower_items.map(&:id)
   end
 
   def test_list_class
@@ -554,9 +554,9 @@ class ArrayScopeListTest < Test::Unit::TestCase
     setup_db
     ['ParentClass', 'bananas'].each do |parent_type|
       [5, 6].each do |parent_id|
-        (1..4).each do |counter|
+        (1..4).each do |i|
           ArrayScopeListMixin.create!(
-            :pos => counter,
+            :pos => i,
             :parent_id => parent_id,
             :parent_type => parent_type
           )
@@ -620,8 +620,8 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
   def test_injection
     item = ArrayScopeListMixin.new(conditions)
-    assert_equal(conditions, item.send(:scope_condition))
-    assert_equal("pos", item.send(:position_column))
+    assert_equal conditions, item.send(:scope_condition)
+    assert_equal "pos", item.send(:position_column)
   end
 
   def test_insert
@@ -752,7 +752,7 @@ class ArrayScopeListTest < Test::Unit::TestCase
   end
 
   def test_move_to_new_list_by_updating_scope_part_2_should_append
-    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [1,  2,  3,  4], ArrayScopeListMixin.where(conditions).map(&:id)
     assert_equal [9, 10, 11, 12], ArrayScopeListMixin.where(conditions(:parent_type => 'bananas')).map(&:id)
 
     ArrayScopeListMixin.find(2).update_attributes! :parent_type => 'bananas'
@@ -767,7 +767,7 @@ class ArrayScopeListTest < Test::Unit::TestCase
   end
 
   def test_move_to_new_list_by_updating_complete_scope_should_append
-    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [ 1,  2,  3,  4], ArrayScopeListMixin.where(conditions).map(&:id)
     assert_equal [13, 14, 15, 16], ArrayScopeListMixin.where(:parent_id => 6, :parent_type => 'bananas').map(&:id)
 
     ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6, :parent_type => 'bananas'
@@ -783,7 +783,9 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
   def test_remove_from_list_should_then_fail_in_list?
     assert_equal true, ArrayScopeListMixin.find(1).in_list?
+
     ArrayScopeListMixin.find(1).remove_from_list
+
     assert_equal false, ArrayScopeListMixin.find(1).in_list?
   end
 
@@ -815,12 +817,12 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
   def test_higher_items
     assert_equal [1, 2], ArrayScopeListMixin.find(3).higher_items.map(&:id)
-    assert_equal [], ArrayScopeListMixin.find(1).higher_items.map(&:id)
+    assert_equal     [], ArrayScopeListMixin.find(1).higher_items.map(&:id)
   end
 
   def test_lower_items
     assert_equal [3, 4], ArrayScopeListMixin.find(2).lower_items.map(&:id)
-    assert_equal [], ArrayScopeListMixin.find(4).lower_items.map(&:id)
+    assert_equal     [], ArrayScopeListMixin.find(4).lower_items.map(&:id)
   end
 
 end
@@ -829,16 +831,16 @@ class AssociationScopeListTest < Test::Unit::TestCase
 
   def setup
     setup_db
-    (1..4).each do |counter|
+    (1..4).each do |i|
       AssociationScopeListMixin.create!(
-        :pos => counter,
+        :pos => i,
         :parent_id => 5
       )
     end
 
-    (1..4).each do |counter|
+    (1..4).each do |i|
       PolymorphicAssociationScopeListMixin.create!(
-        :pos => counter,
+        :pos => i,
         :parent_id => 5,
         :parent_type => 'ParentClass'
       )

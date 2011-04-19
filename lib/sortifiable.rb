@@ -48,32 +48,35 @@ module Sortifiable
     def acts_as_list(options = {})
       options.reverse_merge!(:scope => [], :column => :position)
 
-      if options[:scope].is_a?(Symbol) && reflections.key?(options[:scope])
-        reflection = reflections[options.delete(:scope)]
+      if options[:scope].is_a?(Symbol)
+        if reflections.key?(options[:scope])
+          reflection = reflections[options.delete(:scope)]
 
-        if reflection.belongs_to?
-          if reflection.options[:polymorphic]
-            options[:scope] = [
-              reflection.association_foreign_key.to_sym,
-              reflection.options[:foreign_type].to_sym
-            ]
+          if reflection.belongs_to?
+            if reflection.options[:polymorphic]
+              options[:scope] = [
+                reflection.association_foreign_key.to_sym,
+                reflection.options[:foreign_type].to_sym
+              ]
+            else
+              options[:scope] = reflection.association_foreign_key.to_sym
+            end
           else
-            options[:scope] = reflection.association_foreign_key.to_sym
+            raise ArgumentError, "Only belongs_to associations can be used as a scope"
           end
-        else
-          raise ArgumentError, "Only belongs_to associations can be used as a scope"
+        elsif options[:scope].to_s !~ /_id$/
+          options[:scope] = "#{options[:scope]}_id".to_sym
         end
-      elsif options[:scope].is_a?(Symbol) && options[:scope].to_s !~ /_id$/
-        options[:scope] = "#{options[:scope]}_id".to_sym
       end
 
       options[:class] = self
 
       include InstanceMethods
-      before_create :add_to_list
-      before_destroy :decrement_position_on_lower_items, :if => :in_list?
-      before_save :decrement_position_on_lower_items_in_old_list, :if => :has_left_list?
-      before_save :add_to_bottom_of_new_list, :if => :has_left_list?
+
+      before_create  :add_to_list
+      before_destroy :decrement_position_on_lower_items,             :if => :in_list?
+      before_save    :decrement_position_on_lower_items_in_old_list, :if => :has_left_list?
+      before_save    :add_to_bottom_of_new_list,                     :if => :has_left_list?
 
       self.acts_as_list_options = options
     end
@@ -94,7 +97,7 @@ module Sortifiable
           ids = lock_list!
           last_position = ids.size
           if persisted?
-            update_position(last_position + 1)
+            update_position last_position + 1
           else
             set_position last_position + 1
           end
@@ -207,8 +210,7 @@ module Sortifiable
 
     # Returns the bottom position in the list.
     def last_position
-      item = last_item
-      item ? item.current_position : 0
+      last_item.try(:current_position) || 0
     end
     alias_method :bottom_position, :last_position
 
@@ -431,14 +433,14 @@ module Sortifiable
 
       def scope_condition #:nodoc:
         if acts_as_list_options[:scope].is_a?(String)
-          instance_eval("\"#{acts_as_list_options[:scope]}\"")
+          instance_eval %("#{acts_as_list_options[:scope]}")
         else
-          Array.wrap(acts_as_list_options[:scope]).each_with_object({}) { |k, m| m[k] = send(k) }
+          Array(acts_as_list_options[:scope]).each_with_object({}) { |k, m| m[k] = send(k) }
         end
       end
 
       def update_position(new_position) #:nodoc:
-        list_class.update_all(["#{quoted_position_column} = ?", new_position], list_class.primary_key => id)
+        list_class.update_all({ position_column => new_position }, { list_class.primary_key => id })
         set_position new_position
       end
   end
