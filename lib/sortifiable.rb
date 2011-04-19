@@ -386,7 +386,7 @@ module Sortifiable
         if acts_as_list_options[:scope].is_a?(String)
           instance_eval("\"#{acts_as_list_options[:scope]}\"")
         else
-          Array.wrap(acts_as_list_options[:scope]).inject({}){ |m,k| m[k] = send(k); m }
+          Array.wrap(acts_as_list_options[:scope]).each_with_object({}) { |k, m| m[k] = send(k) }
         end
       end
 
