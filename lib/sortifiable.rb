@@ -72,6 +72,8 @@ module Sortifiable
       include InstanceMethods
       before_create :add_to_list
       before_destroy :decrement_position_on_lower_items, :if => :in_list?
+      before_save :decrement_position_on_lower_items_in_old_list, :if => :has_left_list?
+      before_save :add_to_bottom_of_new_list, :if => :has_left_list?
 
       self.acts_as_list_options = options
     end
@@ -94,7 +96,7 @@ module Sortifiable
           if persisted?
             update_position(last_position + 1)
           else
-            send("#{position_column}=".to_sym, last_position + 1)
+            set_position last_position + 1
           end
         end
       end
@@ -136,6 +138,11 @@ module Sortifiable
     # Test if this record is in a list
     def in_list?
       !new_record? && !send(position_column).nil?
+    end
+
+    # Test if this record was in a scoped list but has left the scope
+    def has_left_list?
+      in_list? && scope_parts.any? { |scope_part| send("#{scope_part}_changed?") }
     end
 
     # Increase the position of this item without adjusting the rest of the list.
@@ -232,7 +239,7 @@ module Sortifiable
               END
             SQL
 
-            send("#{position_column}=".to_sym, current_position - 1)
+            set_position current_position - 1
             list_scope.update_all(sql) > 0
           end
         end
@@ -258,7 +265,7 @@ module Sortifiable
               END
             SQL
 
-            send("#{position_column}=".to_sym, current_position + 1)
+            set_position current_position + 1
             list_scope.update_all(sql) > 0
           end
         end
@@ -285,7 +292,7 @@ module Sortifiable
               END
             SQL
 
-            send("#{position_column}=".to_sym, last_position)
+            set_position last_position
             list_scope.update_all(sql) > 0
           end
         end
@@ -311,7 +318,7 @@ module Sortifiable
               END
             SQL
 
-            send("#{position_column}=".to_sym, 1)
+            set_position 1
             list_scope.update_all(sql) > 0
           end
         end
@@ -335,7 +342,7 @@ module Sortifiable
             END
           SQL
 
-          send("#{position_column}=".to_sym, nil)
+          set_position nil
           list_scope.update_all(sql) > 0
         end
       else
@@ -352,6 +359,46 @@ module Sortifiable
         update = "#{quoted_position_column} = #{quoted_position_column} - 1"
         conditions = "#{quoted_position_column} > #{current_position}"
         list_scope.update_all(update, conditions) > 0
+      end
+
+      def decrement_position_on_lower_items_in_old_list #:nodoc:
+        with_old_scope do
+          decrement_position_on_lower_items
+        end
+      end
+
+      def with_old_scope #:nodoc:
+        # Save new scope in variable
+        new_scope = scope_parts.map { |scope_part| send(scope_part) }
+
+        # Set old scope
+        scope_parts.each { |scope_part| send "#{scope_part}=", send("#{scope_part}_was") }
+
+        yield
+
+        # Set new scope
+        scope_parts.each_with_index { |scope_part, i| send "#{scope_part}=", new_scope[i] }
+      end
+
+      def scope_parts_from_string(string) #:nodoc:
+        string.split('AND').map(&:strip).map { |condition| condition.split.first }
+      end
+
+      def scope_parts #:nodoc:
+        if acts_as_list_options[:scope].is_a?(String)
+          scope_parts_from_string(acts_as_list_options[:scope])
+        else
+          Array(acts_as_list_options[:scope])
+        end
+      end
+
+      def add_to_bottom_of_new_list #:nodoc:
+        set_position nil
+        add_to_list
+      end
+
+      def set_position(position) #:nodoc:
+        send "#{position_column}=", position
       end
 
       def list_class #:nodoc:
@@ -390,9 +437,9 @@ module Sortifiable
         end
       end
 
-      def update_position(new_position)
+      def update_position(new_position) #:nodoc:
         list_class.update_all(["#{quoted_position_column} = ?", new_position], list_class.primary_key => id)
-        send("#{position_column}=".to_sym, new_position)
+        set_position new_position
       end
   end
 end

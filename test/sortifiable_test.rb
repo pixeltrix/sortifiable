@@ -47,6 +47,7 @@ end
 class ListWithStringScopeMixin < ActiveRecord::Base
   acts_as_list :column => "pos", :scope => 'parent_id = #{parent_id}'
   set_table_name "mixins"
+  default_scope order(:pos)
 end
 
 class ArrayScopeListMixin < ActiveRecord::Base
@@ -100,7 +101,11 @@ class ListTest < Test::Unit::TestCase
 
   def setup
     setup_db
-    (1..4).each { |counter| ListMixin.create! :pos => counter, :parent_id => 5 }
+    [5, 6].each do |parent_id|
+      (1..4).each do |counter|
+        ListMixin.create! :pos => counter, :parent_id => parent_id
+      end
+    end
   end
 
   def teardown
@@ -141,6 +146,7 @@ class ListTest < Test::Unit::TestCase
 
   def test_move_to_bottom_with_next_to_last_item
     assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
     ListMixin.find(3).move_to_bottom
     assert_equal [1, 2, 4, 3], ListMixin.where(:parent_id => 5).map(&:id)
   end
@@ -234,13 +240,6 @@ class ListTest < Test::Unit::TestCase
     assert_equal 2, ListMixin.find(4).pos
   end
 
-  def test_with_string_based_scope
-    new = ListWithStringScopeMixin.create(:parent_id => 500)
-    assert_equal 1, new.pos
-    assert new.first?
-    assert new.last?
-  end
-
   def test_nil_scope
     new1, new2, new3 = ListMixin.create, ListMixin.create, ListMixin.create
     new2.move_higher
@@ -279,6 +278,33 @@ class ListTest < Test::Unit::TestCase
     assert_equal 3, ListMixin.find(4).pos
   end
 
+  def test_remove_from_list_by_updating_should_shift_lower_items
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
+    ListMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [1, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
+    assert_equal 1, ListMixin.find(1).pos
+    assert_equal 2, ListMixin.find(3).pos
+    assert_equal 3, ListMixin.find(4).pos
+  end
+
+  def test_move_to_new_list_by_updating_should_append
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+    assert_equal [5, 6, 7, 8], ListMixin.where(:parent_id => 6).map(&:id)
+
+    ListMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [5, 6, 7, 8, 2], ListMixin.where(:parent_id => 6).map(&:id)
+
+    assert_equal 1, ListMixin.find(5).pos
+    assert_equal 2, ListMixin.find(6).pos
+    assert_equal 3, ListMixin.find(7).pos
+    assert_equal 4, ListMixin.find(8).pos
+    assert_equal 5, ListMixin.find(2).pos
+  end
+
   def test_before_destroy_callbacks_do_not_update_position_to_nil_before_deleting_the_record
     assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
 
@@ -308,6 +334,72 @@ class ListTest < Test::Unit::TestCase
   def test_lower_items
     assert_equal [3, 4], ListMixin.find(2).lower_items.map(&:id)
     assert_equal [], ListMixin.find(4).lower_items.map(&:id)
+  end
+
+end
+
+class ListWithStringScopeTest < Test::Unit::TestCase
+
+  def setup
+    setup_db
+    [5, 6].each do |parent_id|
+      (1..4).each do |i|
+        ListWithStringScopeMixin.create! :parent_id => parent_id
+      end
+    end
+  end
+
+  def teardown
+    teardown_db
+  end
+
+  def test_insert
+    new = ListWithStringScopeMixin.create(:parent_id => 500)
+    assert_equal 1, new.pos
+    assert new.first?
+    assert new.last?
+
+    new = ListWithStringScopeMixin.create(:parent_id => 500)
+    assert_equal 2, new.pos
+    assert !new.first?
+    assert new.last?
+
+    new = ListWithStringScopeMixin.create(:parent_id => 500)
+    assert_equal 3, new.pos
+    assert !new.first?
+    assert new.last?
+
+    new = ListWithStringScopeMixin.create(:parent_id => 0)
+    assert_equal 1, new.pos
+    assert new.first?
+    assert new.last?
+  end
+
+  def test_remove_from_list_by_updating_should_shift_lower_items
+    assert_equal [1, 2, 3, 4], ListWithStringScopeMixin.where(:parent_id => 5).map(&:id)
+
+    ListWithStringScopeMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [1, 3, 4], ListWithStringScopeMixin.where(:parent_id => 5).map(&:id)
+
+    assert_equal 1, ListWithStringScopeMixin.find(1).pos
+    assert_equal 2, ListWithStringScopeMixin.find(3).pos
+    assert_equal 3, ListWithStringScopeMixin.find(4).pos
+  end
+
+  def test_move_to_new_list_by_updating_should_append
+    assert_equal [1, 2, 3, 4], ListWithStringScopeMixin.where(:parent_id => 5).map(&:id)
+    assert_equal [5, 6, 7, 8], ListWithStringScopeMixin.where(:parent_id => 6).map(&:id)
+
+    ListWithStringScopeMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [5, 6, 7, 8, 2], ListWithStringScopeMixin.where(:parent_id => 6).map(&:id)
+
+    assert_equal 1, ListWithStringScopeMixin.find(5).pos
+    assert_equal 2, ListWithStringScopeMixin.find(6).pos
+    assert_equal 3, ListWithStringScopeMixin.find(7).pos
+    assert_equal 4, ListWithStringScopeMixin.find(8).pos
+    assert_equal 5, ListWithStringScopeMixin.find(2).pos
   end
 
 end
@@ -460,12 +552,16 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
   def setup
     setup_db
-    (1..4).each do |counter|
-      ArrayScopeListMixin.create!(
-        :pos => counter,
-        :parent_id => 5,
-        :parent_type => 'ParentClass'
-      )
+    ['ParentClass', 'bananas'].each do |parent_type|
+      [5, 6].each do |parent_id|
+        (1..4).each do |counter|
+          ArrayScopeListMixin.create!(
+            :pos => counter,
+            :parent_id => parent_id,
+            :parent_type => parent_type
+          )
+        end
+      end
     end
   end
 
@@ -602,6 +698,87 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
     assert_equal 1, ArrayScopeListMixin.find(3).pos
     assert_equal 2, ArrayScopeListMixin.find(4).pos
+  end
+
+  def test_remove_from_list_by_updating_scope_part_1_should_shift_lower_items
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [1, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(1).pos
+    assert_equal 2, ArrayScopeListMixin.find(3).pos
+    assert_equal 3, ArrayScopeListMixin.find(4).pos
+  end
+
+  def test_remove_from_list_by_updating_scope_part_2_should_shift_lower_items
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_type => 'bananas'
+
+    assert_equal [1, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(1).pos
+    assert_equal 2, ArrayScopeListMixin.find(3).pos
+    assert_equal 3, ArrayScopeListMixin.find(4).pos
+  end
+
+  def test_remove_from_list_by_updating_complete_scope_should_shift_lower_items
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6, :parent_type => 'bananas'
+
+    assert_equal [1, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(1).pos
+    assert_equal 2, ArrayScopeListMixin.find(3).pos
+    assert_equal 3, ArrayScopeListMixin.find(4).pos
+  end
+
+  def test_move_to_new_list_by_updating_scope_part_1_should_append
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [5, 6, 7, 8], ArrayScopeListMixin.where(conditions(:parent_id => 6)).map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6
+
+    assert_equal [5, 6, 7, 8, 2], ArrayScopeListMixin.where(conditions(:parent_id => 6)).map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(5).pos
+    assert_equal 2, ArrayScopeListMixin.find(6).pos
+    assert_equal 3, ArrayScopeListMixin.find(7).pos
+    assert_equal 4, ArrayScopeListMixin.find(8).pos
+    assert_equal 5, ArrayScopeListMixin.find(2).pos
+  end
+
+  def test_move_to_new_list_by_updating_scope_part_2_should_append
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [9, 10, 11, 12], ArrayScopeListMixin.where(conditions(:parent_type => 'bananas')).map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_type => 'bananas'
+
+    assert_equal [9, 10, 11, 12, 2], ArrayScopeListMixin.where(conditions(:parent_type => 'bananas')).map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(9).pos
+    assert_equal 2, ArrayScopeListMixin.find(10).pos
+    assert_equal 3, ArrayScopeListMixin.find(11).pos
+    assert_equal 4, ArrayScopeListMixin.find(12).pos
+    assert_equal 5, ArrayScopeListMixin.find(2).pos
+  end
+
+  def test_move_to_new_list_by_updating_complete_scope_should_append
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [13, 14, 15, 16], ArrayScopeListMixin.where(:parent_id => 6, :parent_type => 'bananas').map(&:id)
+
+    ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6, :parent_type => 'bananas'
+
+    assert_equal [13, 14, 15, 16, 2], ArrayScopeListMixin.where(:parent_id => 6, :parent_type => 'bananas').map(&:id)
+
+    assert_equal 1, ArrayScopeListMixin.find(13).pos
+    assert_equal 2, ArrayScopeListMixin.find(14).pos
+    assert_equal 3, ArrayScopeListMixin.find(15).pos
+    assert_equal 4, ArrayScopeListMixin.find(16).pos
+    assert_equal 5, ArrayScopeListMixin.find(2).pos
   end
 
   def test_remove_from_list_should_then_fail_in_list?
