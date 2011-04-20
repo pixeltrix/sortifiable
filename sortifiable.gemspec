@@ -24,7 +24,7 @@ EOF
     ".gemtest",
     "CHANGELOG",
     "LICENSE",
-    "README",
+    "README.md",
     "Rakefile",
     "lib/sortifiable.rb",
     "lib/sortifiable/version.rb",
