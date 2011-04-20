@@ -12,17 +12,19 @@ the scope methods and query interface introduced with Ruby on Rails 3.0
 Example
 -------
 
-    class TodoList < ActiveRecord::Base
-      has_many :todo_items, :order => "position"
-    end
+``` ruby
+class TodoList < ActiveRecord::Base
+  has_many :todo_items, :order => "position"
+end
 
-    class TodoItem < ActiveRecord::Base
-      belongs_to :todo_list
-      acts_as_list :scope => :todo_list
-    end
+class TodoItem < ActiveRecord::Base
+  belongs_to :todo_list
+  acts_as_list :scope => :todo_list
+end
 
-    todo_list.first.move_to_bottom
-    todo_list.last.move_higher
+todo_list.first.move_to_bottom
+todo_list.last.move_higher
+```
 
 Contributions
 -------------
