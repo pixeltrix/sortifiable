@@ -75,8 +75,8 @@ module Sortifiable
 
       before_create  :add_to_list
       before_destroy :decrement_position_on_lower_items,             :if => :in_list?
-      before_save    :decrement_position_on_lower_items_in_old_list, :if => :has_left_list?
-      before_save    :add_to_bottom_of_new_list,                     :if => :has_left_list?
+      before_save    :decrement_position_on_lower_items_in_old_list, :if => :will_leave_list?
+      before_save    :add_to_bottom_of_new_list,                     :if => :will_leave_list?
 
       self.acts_as_list_options = options
     end
@@ -143,8 +143,8 @@ module Sortifiable
       !new_record? && !send(position_column).nil?
     end
 
-    # Test if this record was in a scoped list but has left the scope
-    def has_left_list?
+    # Test if this record is in a scoped list but will leave the scoped list when saved
+    def will_leave_list?
       in_list? && scope_parts.any? { |scope_part| send("#{scope_part}_changed?") }
     end
 
