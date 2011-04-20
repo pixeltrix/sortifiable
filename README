@@ -24,4 +24,17 @@ the scope methods and query interface introduced with Ruby on Rails 3.0
   todo_list.last.move_higher
 
 
+=== Contributions
+
+Bug fixes and new feature patches are welcome. Please provide tests and
+documentation wherever possible - without them it is unlikely your patch
+will be accepted. If you're fixing a bug then a failing test for the bug
+is essential. Once you have completed your patch please open a GitHub
+pull request and I will review it and respond as quickly as possible.
+
+Thanks to the following people for their contributions:
+
+* Manuel Meurer
+
+
 Copyright (c) 2011 Andrew White, released under the MIT license
