@@ -103,6 +103,8 @@ module Sortifiable
           end
         end
       end
+
+      true
     end
 
     # Returns the current position
@@ -361,12 +363,16 @@ module Sortifiable
         update = "#{quoted_position_column} = #{quoted_position_column} - 1"
         conditions = "#{quoted_position_column} > #{current_position}"
         list_scope.update_all(update, conditions) > 0
+
+        true
       end
 
       def decrement_position_on_lower_items_in_old_list #:nodoc:
         with_old_scope do
           decrement_position_on_lower_items
         end
+
+        true
       end
 
       def with_old_scope #:nodoc:
@@ -397,6 +403,8 @@ module Sortifiable
       def add_to_bottom_of_new_list #:nodoc:
         set_position nil
         add_to_list
+
+        true
       end
 
       def set_position(position) #:nodoc:
