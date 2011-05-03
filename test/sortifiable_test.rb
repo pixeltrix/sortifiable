@@ -344,6 +344,38 @@ class ListTest < Test::Unit::TestCase
     assert_equal true, ListMixin.find(4).move_lower
   end
 
+  def test_add_to_list_should_return_true
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
+    item = ListMixin.new(:parent_id => 5)
+    assert_equal true, item.new_record?
+    assert_equal false, item.in_list?
+    assert_equal true, item.add_to_list
+
+    item = ListMixin.create(:parent_id => 5)
+    item.remove_from_list
+    assert_equal false, item.new_record?
+    assert_equal false, item.in_list?
+    assert_equal true, item.add_to_list
+  end
+
+  def test_decrement_callbacks_should_return_true
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
+    item = ListMixin.find(4)
+    assert_equal 4, item.pos
+    assert_equal true, item.send(:decrement_position_on_lower_items)
+
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+
+    item = ListMixin.find(4)
+    item.parent_id = 6
+
+    assert_equal 4, item.pos
+    assert_equal true, item.will_leave_list?
+    assert_equal true, item.send(:decrement_position_on_lower_items_in_old_list)
+  end
+
 end
 
 class ListWithStringScopeTest < Test::Unit::TestCase

@@ -366,9 +366,13 @@ module Sortifiable
       end
 
       def decrement_position_on_lower_items #:nodoc:
-        update = "#{quoted_position_column} = #{quoted_position_column} - 1"
-        conditions = "#{quoted_position_column} > #{current_position}"
-        list_scope.update_all(update, conditions) > 0
+        if last?
+          true
+        else
+          update = "#{quoted_position_column} = #{quoted_position_column} - 1"
+          conditions = "#{quoted_position_column} > #{current_position}"
+          list_scope.update_all(update, conditions) > 0
+        end
       end
 
       def decrement_position_on_lower_items_in_old_list #:nodoc:
@@ -384,10 +388,12 @@ module Sortifiable
         # Set old scope
         scope_parts.each { |scope_part| send "#{scope_part}=", send("#{scope_part}_was") }
 
-        yield
+        retval = yield
 
         # Set new scope
         scope_parts.each_with_index { |scope_part, i| send "#{scope_part}=", new_scope[i] }
+
+        retval
       end
 
       def scope_parts_from_string(string) #:nodoc:
@@ -409,6 +415,7 @@ module Sortifiable
 
       def set_position(position) #:nodoc:
         send "#{position_column}=", position
+        true
       end
 
       def list_class #:nodoc:
