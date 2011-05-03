@@ -53,14 +53,7 @@ module Sortifiable
           reflection = reflections[options.delete(:scope)]
 
           if reflection.belongs_to?
-            if reflection.options[:polymorphic]
-              options[:scope] = [
-                reflection.association_foreign_key.to_sym,
-                reflection.options[:foreign_type].to_sym
-              ]
-            else
-              options[:scope] = reflection.association_foreign_key.to_sym
-            end
+            options[:scope] = scope_from_association_reflection(reflection)
           else
             raise ArgumentError, "Only belongs_to associations can be used as a scope"
           end
@@ -80,6 +73,24 @@ module Sortifiable
 
       self.acts_as_list_options = options
     end
+
+    private
+      def scope_from_association_reflection(reflection) #:nodoc:
+        if reflection.options[:polymorphic]
+          if reflection.respond_to?(:foreign_type)
+            [reflection.foreign_key, reflection.foreign_type].map(&:to_sym)
+          else
+            [reflection.association_foreign_key, reflection.options[:foreign_type]].map(&:to_sym)
+          end
+        else
+          if reflection.respond_to?(:foreign_type)
+            reflection.foreign_key.to_sym
+          else
+            reflection.association_foreign_key.to_sym
+          end
+        end
+      end
+
   end
 
   # All the methods available to a record that has had <tt>acts_as_list</tt>

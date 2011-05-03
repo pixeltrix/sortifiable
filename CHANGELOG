@@ -1,3 +1,6 @@
+* Rails 3.1 has added Model.foreign_{key,type} to association reflections
+
+
 *0.2.2 (May 3rd, 2011)
 
 * Ensure that callbacks return true when no updates take place
