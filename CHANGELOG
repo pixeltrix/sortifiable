@@ -1,3 +1,5 @@
+*0.2.2 (May 3rd, 2011)
+
 * Ensure that callbacks return true when no updates take place
 
 * Moving first and last items should return true even when no update takes place
