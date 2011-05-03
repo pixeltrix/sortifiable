@@ -1,3 +1,6 @@
+* Loosen gem dependencies so that it will work with Rails edge
+
+
 *0.2.1 (April 20th, 2011)
 
 * Add checking for scope changes so items are moved between lists correctly [Manuel Meurer]
