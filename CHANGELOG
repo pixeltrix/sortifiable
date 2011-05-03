@@ -1,3 +1,5 @@
+*0.2.3 (May 3rd, 2011)
+
 * Rails 3.1 has added Model.foreign_{key,type} to association reflections
 
 
