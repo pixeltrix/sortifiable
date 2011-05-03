@@ -243,6 +243,8 @@ module Sortifiable
 
             set_position current_position - 1
             list_scope.update_all(sql) > 0
+          else
+            true
           end
         end
       else
@@ -269,6 +271,8 @@ module Sortifiable
 
             set_position current_position + 1
             list_scope.update_all(sql) > 0
+          else
+            true
           end
         end
       else
@@ -296,6 +300,8 @@ module Sortifiable
 
             set_position last_position
             list_scope.update_all(sql) > 0
+          else
+            true
           end
         end
       else
@@ -322,6 +328,8 @@ module Sortifiable
 
             set_position 1
             list_scope.update_all(sql) > 0
+          else
+            true
           end
         end
       else

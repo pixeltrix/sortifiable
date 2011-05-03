@@ -336,6 +336,14 @@ class ListTest < Test::Unit::TestCase
     assert_equal     [], ListMixin.find(4).lower_items.map(&:id)
   end
 
+  def test_moving_first_and_last_items_return_true
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+    assert_equal true, ListMixin.find(1).move_to_top
+    assert_equal true, ListMixin.find(1).move_higher
+    assert_equal true, ListMixin.find(4).move_to_bottom
+    assert_equal true, ListMixin.find(4).move_lower
+  end
+
 end
 
 class ListWithStringScopeTest < Test::Unit::TestCase

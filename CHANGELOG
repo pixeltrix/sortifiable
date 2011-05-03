@@ -1,3 +1,5 @@
+* Moving first and last items should return true even when no update takes place
+
 * Loosen gem dependencies so that it will work with Rails edge
 
 
