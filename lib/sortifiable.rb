@@ -438,7 +438,7 @@ module Sortifiable
       end
 
       def lock_list! #:nodoc:
-        connection.select_values(list_scope.select(list_class.primary_key).lock(true).to_sql)
+        connection.select_values(list_scope.select(list_class.primary_key).lock(true).to_sql).map(&:to_i)
       end
 
       def lower_scope(position) #:nodoc:
