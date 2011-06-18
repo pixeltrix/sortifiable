@@ -38,5 +38,6 @@ pull request and I will review it and respond as quickly as possible.
 Thanks to the following people for their contributions:
 
 * Manuel Meurer
+* Reinier de Lange
 
 Copyright (c) 2011 Andrew White, released under the MIT license
