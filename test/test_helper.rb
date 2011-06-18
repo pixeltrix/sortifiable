@@ -1,5 +1,6 @@
 require 'test/unit'
 require 'rubygems'
+require 'logger'
 require 'active_record'
 require 'sortifiable'
 require 'support/migration'
@@ -7,6 +8,8 @@ require 'support/migration'
 if RUBY_VERSION < '1.9'
   $KCODE = 'UTF8'
 end
+
+ActiveRecord::Base.logger = Logger.new($stdout) if ENV["LOG"]
 
 driver = (ENV['DB'] or 'sqlite3').downcase
 config = File.expand_path("../support/#{driver}.yml", __FILE__)
