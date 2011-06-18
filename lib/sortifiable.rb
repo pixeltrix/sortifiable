@@ -58,7 +58,8 @@ module Sortifiable
             raise ArgumentError, "Only belongs_to associations can be used as a scope"
           end
         elsif options[:scope].to_s !~ /_id$/
-          options[:scope] = "#{options[:scope]}_id".to_sym
+          scope_name = "#{options[:scope]}_id"
+          options[:scope] = scope_name.to_sym if column_names.include?(scope_name)
         end
       end
 
