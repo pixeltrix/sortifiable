@@ -172,7 +172,7 @@ class ListTest < ActiveSupport::TestCase
 
     ListMixin.find(2).remove_from_list
 
-    assert_equal [2, 1, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+    assert_equal [1, 3, 4], ListMixin.where(:parent_id => 5).where('pos IS NOT NULL').map(&:id)
 
     assert_equal 1,   ListMixin.find(1).pos
     assert_equal nil, ListMixin.find(2).pos
@@ -707,7 +707,7 @@ class ArrayScopeListTest < ActiveSupport::TestCase
   end
 
   def test_move_to_new_list_by_updating_complete_scope_should_append
-    assert_equal [ 1,  2,  3,  4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [1,  2,  3,  4], ArrayScopeListMixin.where(conditions).map(&:id)
     assert_equal [13, 14, 15, 16], ArrayScopeListMixin.where(:parent_id => 6, :parent_type => 'bananas').map(&:id)
 
     ArrayScopeListMixin.find(2).update_attributes! :parent_id => 6, :parent_type => 'bananas'
@@ -734,7 +734,7 @@ class ArrayScopeListTest < ActiveSupport::TestCase
 
     ArrayScopeListMixin.find(2).remove_from_list
 
-    assert_equal [2, 1, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    assert_equal [1, 3, 4], ArrayScopeListMixin.where(conditions).where('pos IS NOT NULL').map(&:id)
 
     assert_equal 1,   ArrayScopeListMixin.find(1).pos
     assert_equal nil, ArrayScopeListMixin.find(2).pos
