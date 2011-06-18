@@ -439,7 +439,11 @@ module Sortifiable
       end
 
       def lock_list! #:nodoc:
-        connection.select_values(list_scope.select(list_class.primary_key).lock(true).to_sql).map(&:to_i)
+        sql = list_scope.select(list_class.primary_key).lock(true).to_sql
+        column = list_class.columns_hash[list_class.primary_key]
+        connection.select_values(sql).map do |value|
+          column.type_cast(value)
+        end
       end
 
       def lower_scope(position) #:nodoc:
