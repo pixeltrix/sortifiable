@@ -1,86 +1,6 @@
-require 'test/unit'
-require 'rubygems'
-require 'active_record'
-require 'active_support/core_ext/kernel/reporting'
-require 'sortifiable'
+require 'test_helper'
 
-ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
-
-def setup_db
-  silence_stream(STDOUT) do
-    ActiveRecord::Schema.define(:version => 1) do
-      create_table :mixins do |t|
-        t.column :type, :string
-        t.column :pos, :integer
-        t.column :parent_id, :integer
-        t.column :parent_type, :string
-        t.column :created_at, :datetime
-        t.column :updated_at, :datetime
-      end
-    end
-  end
-end
-
-def teardown_db
-  ActiveRecord::Base.connection.tables.each do |table|
-    ActiveRecord::Base.connection.drop_table(table)
-  end
-end
-
-setup_db
-
-class Mixin < ActiveRecord::Base
-end
-
-class ListMixin < ActiveRecord::Base
-  acts_as_list :column => "pos", :scope => :parent
-  set_table_name "mixins"
-  default_scope order(:pos)
-end
-
-class ListMixinSub1 < ListMixin
-end
-
-class ListMixinSub2 < ListMixin
-end
-
-class ListWithStringScopeMixin < ActiveRecord::Base
-  acts_as_list :column => "pos", :scope => 'parent_id = #{parent_id}'
-  set_table_name "mixins"
-  default_scope order(:pos)
-end
-
-class ArrayScopeListMixin < ActiveRecord::Base
-  acts_as_list :column => "pos", :scope => [:parent_id, :parent_type]
-  set_table_name "mixins"
-  default_scope order(:pos)
-end
-
-class AssociationScopeListMixin < ActiveRecord::Base
-  belongs_to :parent
-  acts_as_list :column => "pos", :scope => :parent
-  set_table_name "mixins"
-  default_scope order(:pos)
-end
-
-class PolymorphicAssociationScopeListMixin < ActiveRecord::Base
-  belongs_to :parent, :polymorphic => true
-  acts_as_list :column => "pos", :scope => :parent
-  set_table_name "mixins"
-  default_scope order(:pos)
-end
-
-teardown_db
-
-class NonListTest < Test::Unit::TestCase
-
-  def setup
-    setup_db
-  end
-
-  def teardown
-    teardown_db
-  end
+class NonListTest < ActiveSupport::TestCase
 
   def test_callbacks_are_not_added_to_all_models
     Mixin.create! :pos => 1, :parent_id => 5
@@ -97,19 +17,14 @@ class NonListTest < Test::Unit::TestCase
 
 end
 
-class ListTest < Test::Unit::TestCase
+class ListTest < ActiveSupport::TestCase
 
   def setup
-    setup_db
     [5, 6].each do |parent_id|
       (1..4).each do |i|
         ListMixin.create! :pos => i, :parent_id => parent_id
       end
     end
-  end
-
-  def teardown
-    teardown_db
   end
 
   def test_reordering
@@ -378,19 +293,14 @@ class ListTest < Test::Unit::TestCase
 
 end
 
-class ListWithStringScopeTest < Test::Unit::TestCase
+class ListWithStringScopeTest < ActiveSupport::TestCase
 
   def setup
-    setup_db
     [5, 6].each do |parent_id|
       (1..4).each do |i|
         ListWithStringScopeMixin.create! :parent_id => parent_id
       end
     end
-  end
-
-  def teardown
-    teardown_db
   end
 
   def test_insert
@@ -444,18 +354,13 @@ class ListWithStringScopeTest < Test::Unit::TestCase
 
 end
 
-class ListSubTest < Test::Unit::TestCase
+class ListSubTest < ActiveSupport::TestCase
 
   def setup
-    setup_db
     (1..4).each do |i|
       klass = ((i % 2 == 1) ? ListMixinSub1 : ListMixinSub2)
       klass.create! :pos => i, :parent_id => 5000
     end
-  end
-
-  def teardown
-    teardown_db
   end
 
   def test_sti_class
@@ -588,10 +493,9 @@ class ListSubTest < Test::Unit::TestCase
 
 end
 
-class ArrayScopeListTest < Test::Unit::TestCase
+class ArrayScopeListTest < ActiveSupport::TestCase
 
   def setup
-    setup_db
     ['ParentClass', 'bananas'].each do |parent_type|
       [5, 6].each do |parent_id|
         (1..4).each do |i|
@@ -603,10 +507,6 @@ class ArrayScopeListTest < Test::Unit::TestCase
         end
       end
     end
-  end
-
-  def teardown
-    teardown_db
   end
 
   def conditions(options = {})
@@ -867,10 +767,9 @@ class ArrayScopeListTest < Test::Unit::TestCase
 
 end
 
-class AssociationScopeListTest < Test::Unit::TestCase
+class AssociationScopeListTest < ActiveSupport::TestCase
 
   def setup
-    setup_db
     (1..4).each do |i|
       AssociationScopeListMixin.create!(
         :pos => i,
@@ -885,10 +784,6 @@ class AssociationScopeListTest < Test::Unit::TestCase
         :parent_type => 'ParentClass'
       )
     end
-  end
-
-  def teardown
-    teardown_db
   end
 
   def test_association_scope_is_configured

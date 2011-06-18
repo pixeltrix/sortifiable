@@ -10,7 +10,7 @@ task :default => :test
 
 desc 'Test the sortifiable gem.'
 Rake::TestTask.new(:test) do |t|
-  t.libs << 'lib'
+  t.libs += %w[lib test]
   t.pattern = 'test/**/*_test.rb'
   t.verbose = true
 end

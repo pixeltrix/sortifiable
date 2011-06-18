@@ -1,0 +1,6 @@
+adapter: postgresql
+database: sortifiable
+username: sortifiable
+host: localhost
+encoding: utf8
+min_messages: warning
