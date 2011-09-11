@@ -1,9 +1,6 @@
-require 'rake'
-require 'rake/rdoctask'
 require 'rake/testtask'
-require 'bundler'
-
-Bundler::GemHelper.install_tasks
+require 'rdoc/task'
+require "bundler/gem_tasks"
 
 desc 'Default: run sortifiable unit tests.'
 task :default => :test
@@ -16,7 +13,7 @@ Rake::TestTask.new(:test) do |t|
 end
 
 desc 'Generate documentation for the sortifiable gem.'
-Rake::RDocTask.new(:rdoc) do |rdoc|
+RDoc::Task.new do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'Sortifiable'
   rdoc.options << '--line-numbers' << '--inline-source'
