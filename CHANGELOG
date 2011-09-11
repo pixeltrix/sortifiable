@@ -1,3 +1,6 @@
+* Don't rely on the current position attribute as it may be stale
+
+
 *0.2.4 (June 18th, 2011)
 
 * Typecast the list of primary keys return by lock_list! correctly as

@@ -155,6 +155,12 @@ class ListTest < ActiveSupport::TestCase
     assert_equal 2, ListMixin.find(4).pos
   end
 
+  def test_destroy_all
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
+    ListMixin.destroy_all
+    assert_equal [], ListMixin.where(:parent_id => 5).map(&:id)
+  end
+
   def test_nil_scope
     new1, new2, new3 = ListMixin.create, ListMixin.create, ListMixin.create
     new2.move_higher
@@ -289,6 +295,18 @@ class ListTest < ActiveSupport::TestCase
     assert_equal 4, item.pos
     assert_equal true, item.will_leave_list?
     assert_equal true, item.send(:decrement_position_on_lower_items_in_old_list)
+  end
+
+  def test_decrement_callbacks_maintain_list_order
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:pos)
+
+    third = ListMixin.where(:parent_id => 5, :pos => 3).first
+    first = ListMixin.where(:parent_id => 5, :pos => 1).first
+
+    first.destroy
+    third.destroy
+
+    assert_equal [1, 2], ListMixin.where(:parent_id => 5).map(&:pos)
   end
 
 end
@@ -475,6 +493,12 @@ class ListSubTest < ActiveSupport::TestCase
     assert_equal 2, ListMixin.find(4).pos
   end
 
+  def test_destroy_all
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5000).map(&:id)
+    ListMixin.destroy_all
+    assert_equal [], ListMixin.where(:parent_id => 5000).map(&:id)
+  end
+
   def test_higher_items
     ListMixin.find(2).remove_from_list
     assert_equal [1], ListMixin.find(3).higher_items.map(&:id)
@@ -638,6 +662,12 @@ class ArrayScopeListTest < ActiveSupport::TestCase
 
     assert_equal 1, ArrayScopeListMixin.find(3).pos
     assert_equal 2, ArrayScopeListMixin.find(4).pos
+  end
+
+  def test_destroy_all
+    assert_equal [1, 2, 3, 4], ArrayScopeListMixin.where(conditions).map(&:id)
+    ArrayScopeListMixin.destroy_all
+    assert_equal [], ArrayScopeListMixin.where(conditions).map(&:id)
   end
 
   def test_remove_from_list_by_updating_scope_part_1_should_shift_lower_items

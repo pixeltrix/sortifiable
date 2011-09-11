@@ -378,12 +378,17 @@ module Sortifiable
       end
 
       def decrement_position_on_lower_items #:nodoc:
-        if last?
-          true
-        else
-          update = "#{quoted_position_column} = #{quoted_position_column} - 1"
-          conditions = "#{quoted_position_column} > #{current_position}"
-          list_scope.update_all(update, conditions) > 0
+        list_class.transaction do
+          ids = lock_list!
+          current_position, last_position = ids.index(id) + 1, ids.size
+
+          if current_position == last_position
+            true
+          else
+            update = "#{quoted_position_column} = #{quoted_position_column} - 1"
+            conditions = "#{quoted_position_column} > #{current_position}"
+            list_scope.update_all(update, conditions) > 0
+          end
         end
       end
 
