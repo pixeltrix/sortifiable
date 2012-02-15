@@ -827,3 +827,23 @@ class AssociationScopeListTest < ActiveSupport::TestCase
   end
 
 end
+
+class ThroughAssociationTest < ActiveSupport::TestCase
+  fixtures :playlists, :playlist_media_files, :media_files
+
+  def setup
+    @playlist = playlists(:playlist)
+  end
+
+  def test_destroy_removes_join_records
+    assert_equal ['Song 2', 'Song 3', 'Song 1'], @playlist.media_files.map(&:name)
+
+    @playlist.media_files.first.destroy
+    @playlist.reload
+
+    assert_equal [1, 2], @playlist.playlist_media_files.map(&:position)
+    assert_equal ['Song 3', 'Song 1'], @playlist.media_files.map(&:name)
+    assert_equal 2, @playlist.file_count
+    assert @playlist.updated_at > @playlist.created_at
+  end
+end

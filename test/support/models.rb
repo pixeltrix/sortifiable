@@ -38,3 +38,20 @@ class PolymorphicAssociationScopeListMixin < ActiveRecord::Base
   default_scope order(:pos)
   acts_as_list :column => "pos", :scope => :parent
 end
+
+class MediaFile < ActiveRecord::Base
+  has_many :playlist_media_files, :dependent => :destroy
+  has_many :playlists, :through => :playlist_media_files
+end
+
+class PlaylistMediaFile < ActiveRecord::Base
+  acts_as_list :scope => :playlist
+  belongs_to :playlist, :touch => true, :counter_cache => :file_count
+  belongs_to :media_file
+  default_scope order(:position)
+end
+
+class Playlist < ActiveRecord::Base
+  has_many :playlist_media_files, :dependent => :destroy
+  has_many :media_files, :through => :playlist_media_files
+end

@@ -1,0 +1,17 @@
+song_1:
+  id: 1
+  name: "Song 1"
+  created_at: "2012-01-01 00:00:00"
+  updated_at: "2012-01-01 00:00:00"
+
+song_2:
+  id: 2
+  name: "Song 2"
+  created_at: "2012-01-01 00:00:00"
+  updated_at: "2012-01-01 00:00:00"
+
+song_3:
+  id: 3
+  name: "Song 3"
+  created_at: "2012-01-01 00:00:00"
+  updated_at: "2012-01-01 00:00:00"
