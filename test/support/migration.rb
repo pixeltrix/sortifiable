@@ -5,6 +5,7 @@ class CreateModels < ActiveRecord::Migration
       t.column :pos, :integer
       t.column :parent_id, :integer
       t.column :parent_type, :string
+      t.column :deleted_at, :datetime
       t.column :created_at, :datetime
       t.column :updated_at, :datetime
     end

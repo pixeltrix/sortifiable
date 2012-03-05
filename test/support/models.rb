@@ -38,3 +38,21 @@ class PolymorphicAssociationScopeListMixin < ActiveRecord::Base
   default_scope order(:pos)
   acts_as_list :column => "pos", :scope => :parent
 end
+
+class ParanoidMixin < ActiveRecord::Base
+  self.table_name =  "mixins"
+  default_scope where(:deleted_at => nil).order(:pos)
+  acts_as_list :column => "pos", :scope => :parent
+
+  def self.deleted
+    unscoped.where('deleted_at IS NOT NULL')
+  end
+
+  def destroy
+    update_attributes(:deleted_at => Time.current)
+  end
+
+  def restore
+    update_attributes(:deleted_at => nil)
+  end
+end

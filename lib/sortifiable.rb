@@ -476,7 +476,7 @@ module Sortifiable
       end
 
       def update_position(new_position) #:nodoc:
-        list_class.update_all({ position_column => new_position }, { list_class.primary_key => id })
+        base_scope.update_all({ position_column => new_position }, { list_class.primary_key => id })
         set_position new_position
       end
   end

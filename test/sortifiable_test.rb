@@ -827,3 +827,54 @@ class AssociationScopeListTest < ActiveSupport::TestCase
   end
 
 end
+
+class DefaultScopeListTest < ActiveSupport::TestCase
+
+  def setup
+    [5, 6].each do |parent_id|
+      (1..4).each do |i|
+        ParanoidMixin.create! :pos => i, :parent_id => parent_id
+      end
+    end
+  end
+
+  def relation
+    ParanoidMixin.where(:parent_id => 5).where('pos IS NOT NULL')
+  end
+
+  def test_default_scope_is_ignored_when_updating_position
+
+    assert_equal [1, 2, 3, 4], relation.map(&:id)
+
+    ParanoidMixin.find(3).destroy
+    assert_equal [1, 2, 4], relation.map(&:id)
+
+    ParanoidMixin.find(4).move_to_top
+    assert_equal [4, 1, 2], relation.map(&:id)
+
+    ParanoidMixin.find(2).move_to_bottom
+    assert_equal [4, 1, 2], relation.map(&:id)
+
+    ParanoidMixin.find(1).remove_from_list
+    assert_equal false, ParanoidMixin.find(1).in_list?
+    assert_equal [4, 2], relation.map(&:id)
+
+    ParanoidMixin.find(1).add_to_list
+    assert_equal true, ParanoidMixin.find(1).in_list?
+    assert_equal [4, 2, 1], relation.map(&:id)
+
+    ParanoidMixin.deleted.find(3).remove_from_list
+    assert_equal false, ParanoidMixin.deleted.find(3).in_list?
+    assert_equal [4, 2, 1], relation.map(&:id)
+
+    ParanoidMixin.deleted.find(3).add_to_list
+    assert_equal true, ParanoidMixin.deleted.find(3).in_list?
+    assert_equal [4, 2, 1], relation.map(&:id)
+
+    ParanoidMixin.deleted.find(3).restore
+    assert_equal [4, 2, 1, 3], relation.map(&:id)
+    assert_equal [1, 2, 3, 4], relation.map(&:pos)
+
+  end
+
+end
