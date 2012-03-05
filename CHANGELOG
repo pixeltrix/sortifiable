@@ -1,3 +1,8 @@
+*0.2.6 (March 5th, 2012)
+
+* Ensure that the default scope is ignored when performing list updates
+
+
 *0.2.5 (September 11th, 2011)
 
 * Don't rely on the current position attribute as it may be stale
