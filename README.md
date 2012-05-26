@@ -1,6 +1,8 @@
 Sortifiable
 ===========
 
+[![Build Status][build]][travis] [![Dependency Status][depends]][gemnasium]
+
 This gem provides an acts_as_list compatible capability for sorting
 and reordering a number of objects in a list. The class that has this
 specified needs to have a +position+ column defined as an integer on
@@ -41,3 +43,8 @@ Thanks to the following people for their contributions:
 * Reinier de Lange
 
 Copyright (c) 2011 Andrew White, released under the MIT license
+
+[build]: https://secure.travis-ci.org/pixeltrix/sortifiable.png
+[travis]: http://travis-ci.org/pixeltrix/sortifiable
+[depends]: https://gemnasium.com/pixeltrix/sortifiable.png?travis
+[gemnasium]: https://gemnasium.com/pixeltrix/sortifiable

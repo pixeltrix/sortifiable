@@ -3,7 +3,7 @@ require 'rdoc/task'
 require "bundler/gem_tasks"
 
 desc 'Default: run sortifiable unit tests.'
-task :default => :test
+task :default => "test:all"
 
 desc 'Test the sortifiable gem.'
 Rake::TestTask.new(:test) do |t|

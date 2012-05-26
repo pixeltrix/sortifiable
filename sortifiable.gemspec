@@ -37,7 +37,6 @@ EOF
 
   s.add_dependency "activesupport", ">= 3.0"
   s.add_dependency "activerecord", ">= 3.0"
-  s.add_development_dependency "bundler", ">= 1.0.18"
   s.add_development_dependency "mysql", "~> 2.8.1"
   s.add_development_dependency "mysql2", ">= 0.2.7"
   s.add_development_dependency "pg", ">= 0.9.0"
