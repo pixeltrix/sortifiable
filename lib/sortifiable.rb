@@ -327,7 +327,7 @@ module Sortifiable
       if in_list?
         list_class.transaction do
           ids = lock_list!
-          current_position, last_position = ids.index(id) + 1, ids.size
+          current_position = ids.index(id) + 1
 
           if current_position > 1
             sql = <<-SQL
@@ -354,7 +354,7 @@ module Sortifiable
       if in_list?
         list_class.transaction do
           ids = lock_list!
-          current_position, last_position = ids.index(id) + 1, ids.size
+          current_position = ids.index(id) + 1
 
           sql = <<-SQL
             #{quoted_position_column} = CASE
