@@ -173,10 +173,11 @@ module Sortifiable
 
         if persisted?
           current_position = ids.index(id) + 1
+          new_position = position < current_position ? position : position - 1
 
           sql = <<-SQL
             #{quoted_position_column} = CASE
-            WHEN #{quoted_position_column} = #{current_position} THEN #{position}
+            WHEN #{quoted_position_column} = #{current_position} THEN #{new_position}
             WHEN #{quoted_position_column} > #{current_position}
             AND #{quoted_position_column} < #{position} THEN #{quoted_position_column} - 1
             WHEN #{quoted_position_column} < #{current_position}
@@ -186,7 +187,7 @@ module Sortifiable
           SQL
 
           list_scope.update_all(sql)
-          update_position(position)
+          set_position new_position
         else
           save!
 
@@ -198,7 +199,7 @@ module Sortifiable
           SQL
 
           list_scope.update_all(sql)
-          update_position(position)
+          set_position position
         end
       end
     end
