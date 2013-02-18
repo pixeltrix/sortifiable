@@ -134,6 +134,15 @@ class ListTest < ActiveSupport::TestCase
 
     new4.reload
     assert_equal 5, new4.pos
+
+    new.reload
+    assert_equal 3, new.pos
+
+    new.insert_at(5)
+    assert_equal 4, new.reload.pos
+
+    new4.reload
+    assert_equal 5, new4.pos
   end
 
   def test_delete_middle
