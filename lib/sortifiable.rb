@@ -178,7 +178,7 @@ module Sortifiable
             #{quoted_position_column} = CASE
             WHEN #{quoted_position_column} = #{current_position} THEN #{position}
             WHEN #{quoted_position_column} > #{current_position}
-            AND #{quoted_position_column} < #{position} THEN #{quoted_position_column} - 1
+            AND #{quoted_position_column} <= #{position} THEN #{quoted_position_column} - 1
             WHEN #{quoted_position_column} < #{current_position}
             AND #{quoted_position_column} >= #{position} THEN #{quoted_position_column} + 1
             ELSE #{quoted_position_column}

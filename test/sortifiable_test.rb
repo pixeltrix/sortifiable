@@ -104,36 +104,55 @@ class ListTest < ActiveSupport::TestCase
   def test_insert_at
     new = ListMixin.create(:parent_id => 20)
     assert_equal 1, new.pos
+    assert_equal [1], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new = ListMixin.create(:parent_id => 20)
     assert_equal 2, new.pos
+    assert_equal [1, 2], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new = ListMixin.create(:parent_id => 20)
     assert_equal 3, new.pos
+    assert_equal [1, 2, 3], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new4 = ListMixin.create(:parent_id => 20)
     assert_equal 4, new4.pos
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new4.insert_at(3)
     assert_equal 3, new4.pos
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new.reload
     assert_equal 4, new.pos
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new.insert_at(2)
     assert_equal 2, new.pos
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new4.reload
     assert_equal 4, new4.pos
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new5 = ListMixin.create(:parent_id => 20)
     assert_equal 5, new5.pos
+    assert_equal [1, 2, 3, 4, 5], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new5.insert_at(1)
     assert_equal 1, new5.pos
+    assert_equal [1, 2, 3, 4, 5], ListMixin.where(:parent_id => 20).map(&:pos)
 
     new4.reload
     assert_equal 5, new4.pos
+    assert_equal [1, 2, 3, 4, 5], ListMixin.where(:parent_id => 20).map(&:pos)
+
+    new.reload
+    assert_equal 3, new.pos
+    assert_equal [1, 2, 3, 4, 5], ListMixin.where(:parent_id => 20).map(&:pos)
+
+    new.insert_at(5)
+    assert_equal 5, new.pos
+    assert_equal [1, 2, 3, 4, 5], ListMixin.where(:parent_id => 20).map(&:pos)
   end
 
   def test_delete_middle
