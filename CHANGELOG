@@ -1,3 +1,8 @@
+*0.2.7 (February 23rd, 2013)
+
+* Fix a bug when using insert_at to move an existing item down the list [Arthur Holstvoogd]
+
+
 *0.2.6 (March 5th, 2012)
 
 * Ensure that the default scope is ignored when performing list updates
