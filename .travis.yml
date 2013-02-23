@@ -4,8 +4,8 @@ rvm:
   - 1.9.3
   - 2.0.0
 before_script:
-  - mysql -e 'create user sortifiable@localhost;'
-  - mysql -e 'create database sortifiable;'
-  - mysql -e 'grant all on sortifiable.* to sortifiable@localhost'
+  - mysql -uroot -e 'create user sortifiable@localhost;'
+  - mysql -uroot -e 'create database sortifiable;'
+  - mysql -uroot -e 'grant all on sortifiable.* to sortifiable@localhost'
   - psql -c 'create user sortifiable;' -U postgres
   - psql -c 'create database sortifiable owner sortifiable;' -U postgres
