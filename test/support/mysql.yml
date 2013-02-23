@@ -1,4 +1,4 @@
 adapter: mysql
 database: sortifiable
-username: root
+username: sortifiable
 encoding: utf8

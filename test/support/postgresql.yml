@@ -1,5 +1,5 @@
 adapter: postgresql
 database: sortifiable
-username: postgres
+username: sortifiable
 encoding: utf8
 min_messages: warning
