@@ -1,6 +1,7 @@
 require 'rake/testtask'
 require 'rdoc/task'
 require "bundler/gem_tasks"
+require 'appraisal'
 
 desc 'Default: run sortifiable unit tests.'
 task :default => "test:all"

@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
-gem 'mysql', '2.8.1'
-gem 'rake', '>= 0.9.2'
-gem 'rdoc', '>= 3.12'
+gem 'mysql', '>= 2.8.1'
+gem 'rake',  '>= 10.1.0'
+gem 'rdoc',  '>= 4.0.1'
 
 gemspec
