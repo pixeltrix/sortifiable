@@ -147,7 +147,7 @@ module Sortifiable
 
     # Return items lower than this item or an empty array if it is the last item
     def higher_items
-      list_scope.where(["#{quoted_position_column} < ?", current_position]).all
+      list_scope.where(["#{quoted_position_column} < ?", current_position]).to_a
     end
 
     # Test if this record is in a list
@@ -234,7 +234,7 @@ module Sortifiable
 
     # Return items lower than this item or an empty array if it is the last item
     def lower_items
-      list_scope.where(["#{quoted_position_column} > ?", current_position]).all
+      list_scope.where(["#{quoted_position_column} > ?", current_position]).to_a
     end
 
     # Swap positions with the next higher item, if one exists.
@@ -387,7 +387,7 @@ module Sortifiable
           else
             update = "#{quoted_position_column} = #{quoted_position_column} - 1"
             conditions = "#{quoted_position_column} > #{current_position}"
-            list_scope.update_all(update, conditions) > 0
+            list_scope.where(conditions).update_all(update) > 0
           end
         end
       end
@@ -446,7 +446,7 @@ module Sortifiable
       def lock_list! #:nodoc:
         sql = list_scope.select(list_class.primary_key).lock(true).to_sql
         column = list_class.columns_hash[list_class.primary_key]
-        connection.select_values(sql).map do |value|
+        list_class.connection.select_values(sql).map do |value|
           column.type_cast(value)
         end
       end
@@ -464,7 +464,7 @@ module Sortifiable
       end
 
       def quoted_position_column #:nodoc:
-        connection.quote_column_name(position_column)
+        list_class.connection.quote_column_name(position_column)
       end
 
       def scope_condition #:nodoc:
@@ -476,7 +476,7 @@ module Sortifiable
       end
 
       def update_position(new_position) #:nodoc:
-        base_scope.update_all({ position_column => new_position }, { list_class.primary_key => id })
+        base_scope.where({ list_class.primary_key => id }).update_all({ position_column => new_position })
         set_position new_position
       end
   end
