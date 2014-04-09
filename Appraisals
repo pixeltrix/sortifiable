@@ -20,3 +20,9 @@ appraise 'activerecord_4_0' do
   gem 'mysql',        '~> 2.9'
   gem 'mysql2',       '~> 0.3.10'
 end
+
+appraise 'activerecord_4_1' do
+  gem 'activerecord', '~> 4.1.0'
+  gem 'mysql',        '~> 2.9'
+  gem 'mysql2',       '~> 0.3.10'
+end
