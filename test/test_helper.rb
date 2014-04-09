@@ -1,4 +1,9 @@
-require 'test/unit'
+if RUBY_VERSION < '1.9'
+  require 'test/unit'
+else
+  require 'minitest/autorun'
+end
+
 require 'rubygems'
 require 'logger'
 require 'active_record'
