@@ -20,6 +20,6 @@ before_script:
 matrix:
   exclude:
     - rvm: 1.8.7
-      gemfile:
-        - gemfiles/activerecord_4_0.gemfile
-        - gemfiles/activerecord_4_1.gemfile
+      gemfile: gemfiles/activerecord_4_0.gemfile
+    - rvm: 1.8.7
+      gemfile: gemfiles/activerecord_4_1.gemfile
