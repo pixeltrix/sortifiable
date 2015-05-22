@@ -476,7 +476,7 @@ module Sortifiable
       end
 
       def update_position(new_position) #:nodoc:
-        base_scope.where({ list_class.primary_key => id }).update_all({ position_column => new_position })
+        list_class.unscoped.where({ list_class.primary_key => id }).update_all({ position_column => new_position }) #.tap{|result| raise 'update_position failed' if result.zero? }
         set_position new_position
       end
   end

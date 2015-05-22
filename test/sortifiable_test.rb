@@ -245,6 +245,24 @@ class ListTest < ActiveSupport::TestCase
     assert_equal 5, ListMixin.find(2).pos
   end
 
+  def test_move_to_new_list_by_updating_parent_should_keep_position_integrity
+    assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:pos)
+
+    ListMixin.where(:parent_id => 5).each do |mixin|
+      mixin.parent_id = 6
+      assert mixin.save
+    end
+
+    assert_equal [1, 2, 3, 4, 5, 6, 7, 8], ListMixin.where(:parent_id => 6).map(&:pos)
+
+    ListMixin.where(:parent_id => 6).each do |mixin|
+      mixin.parent_id = 5
+      assert mixin.save
+    end
+
+    assert_equal [1, 2, 3, 4, 5, 6, 7, 8], ListMixin.where(:parent_id => 5).map(&:pos)
+  end
+
   def test_before_destroy_callbacks_do_not_update_position_to_nil_before_deleting_the_record
     assert_equal [1, 2, 3, 4], ListMixin.where(:parent_id => 5).map(&:id)
 
