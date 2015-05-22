@@ -35,7 +35,7 @@ EOF
   s.test_files    = ["test/sortifiable_test.rb"]
   s.require_paths = ["lib"]
 
-  s.add_dependency "activesupport", ">= 3.0"
+  s.add_dependency "activesupport", ">= 3.0", "<= 4.1"
   s.add_dependency "activerecord", ">= 3.0"
   s.add_development_dependency "appraisal", "~> 0.5"
   s.add_development_dependency "mysql", ">= 2.8.1"
