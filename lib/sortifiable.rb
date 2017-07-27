@@ -447,7 +447,7 @@ module Sortifiable
         sql = list_scope.select(list_class.primary_key).lock(true).to_sql
         column = list_class.columns_hash[list_class.primary_key]
         list_class.connection.select_values(sql).map do |value|
-          column.type_cast(value)
+          column.type_cast_from_database(value)
         end
       end
 
